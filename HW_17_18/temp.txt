@@ -1,0 +1,23 @@
+SELECT Customers.CustomerID,
+	   Customers.CompanyName,
+	   Orders.OrderID,
+	   Orders.OrderDate,
+	   SUM(OrderDetails.UnitPrice*OrderDetails.Quantity*(1.0 - OrderDetails.Discount)) AS TotalPrice
+FROM Customers
+JOIN Orders ON Customers.CustomerID = Orders.CustomerID
+JOIN OrderDetails ON Orders.OrderID = OrderDetails.OrderID
+GROUP BY Customers.CustomerID,
+		 Customers.CompanyName,
+		 Orders.OrderID,
+		 Orders.OrderDate
+HAVING SUM(OrderDetails.UnitPrice * OrderDetails.Quantity *(1.0 - OrderDetails.Discount)) = (
+	SELECT MAX(OrderTotal)
+	FROM (
+		SELECT SUM(od.UnitPrice * od.Quantity *(1.0 - od.Discount)) AS OrderTotal
+		FROM Customers c
+		JOIN Orders o ON c.CustomerID = o.CustomerID
+		JOIN OrderDetails od ON o.OrderID = od.OrderID
+		GROUP BY c.CustomerID, o.OrderID 
+	) AS MaxOrder
+);
+GO
